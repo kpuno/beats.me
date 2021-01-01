@@ -23,6 +23,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
+var _a, _b, _c, _d;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserResolver = void 0;
 const User_1 = require("../entities/User");
@@ -149,7 +150,7 @@ __decorate([
     __param(0, type_graphql_1.Arg("username")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", typeof (_a = typeof Promise !== "undefined" && Promise) === "function" ? _a : Object)
 ], UserResolver.prototype, "user", null);
 __decorate([
     type_graphql_1.Query(() => UserResponse),
@@ -157,20 +158,20 @@ __decorate([
     __param(1, type_graphql_1.Arg("password")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", typeof (_b = typeof Promise !== "undefined" && Promise) === "function" ? _b : Object)
 ], UserResolver.prototype, "login", null);
 __decorate([
     type_graphql_1.Mutation(() => User_1.User),
     __param(0, type_graphql_1.Arg("options")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [InputRegister]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", typeof (_c = typeof Promise !== "undefined" && Promise) === "function" ? _c : Object)
 ], UserResolver.prototype, "register", null);
 __decorate([
     type_graphql_1.Query(() => [User_1.User]),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", typeof (_d = typeof Promise !== "undefined" && Promise) === "function" ? _d : Object)
 ], UserResolver.prototype, "users", null);
 UserResolver = __decorate([
     type_graphql_1.Resolver()
