@@ -1,7 +1,9 @@
 import { User } from "../entities/User"
-import { Resolver, Query, Mutation, InputType, Arg, Field, ObjectType } from "type-graphql"
+import { Resolver, Query, Mutation, InputType, Arg, Field, ObjectType, Ctx } from "type-graphql"
 import argon2 from "argon2"
 import { getRepository } from "typeorm"
+import { MyContext } from "../types"
+import { COOKIE_NAME } from "../constants"
 
 @InputType()
 class InputRegister {
@@ -38,6 +40,20 @@ export class UserResolver {
 
   private userRepository = getRepository(User)
 
+  @Query(() => User, {nullable: true})
+  async me (
+    @Ctx() { req }: MyContext
+  ) {
+    // you are not logged in
+    if (!req.session.userId) {
+      return null
+    }
+
+    const user = await this.userRepository.findOne({ id: req.session.userId.toString() })
+    
+    return user
+  }
+
   // find 1 user
   @Query(() => UserResponse)
   async user(
@@ -61,7 +77,8 @@ export class UserResolver {
   @Query(() => UserResponse)
   async login(
     @Arg("usernameOrEmail") usernameOrEmail: string,
-    @Arg("password") password: string
+    @Arg("password") password: string,
+    @Ctx() { req }: MyContext
   ): Promise<UserResponse> {
     const user = await this.userRepository.findOne(
       usernameOrEmail.includes('@') ? 
@@ -75,10 +92,15 @@ export class UserResolver {
           message: "Incorrect credentials, please try again",
         }]
       }
-    }
+    } else 
 
     try {
       if (await argon2.verify(user!.password, password)) {
+        // store user id session
+        // this will set a cookie on the user
+        // keep them logged in
+        req.session!.userId = parseInt(user.id)
+        
         return { user }
       } else {
         return {
@@ -98,35 +120,79 @@ export class UserResolver {
     }
   }
 
-
   // logout user
+  @Mutation(() => Boolean)
+  logout(
+    @Ctx() {req, res}: MyContext
+  ) {
+    return  new Promise(resolve => req.session.destroy(err => {
+      res.clearCookie(COOKIE_NAME)
+      if (err) {
+        console.log(err)
+        resolve(false)
+        return
+      } 
+      resolve(true)
+    }))
+  }
+  
   // change password
   // find username includes (as user is typing)
+  // redis caching
+  // login  user when created
 
   @Mutation(() => User) 
   async register (
     @Arg("options") { username, email, password }: InputRegister
-  ): Promise<User> {
-    if (username.length < 2) {
+  ): Promise<UserResponse> {
 
+    // check duplicate email username
+    let user = await this.userRepository.findOne({
+      where: { $or: [{ email }, { username }] }
+    })
+    
+    if (user) {
+      return {
+        errors: [{
+        field: "username",
+        message: "Username or email already exists",
+      }]
+    }
+    }
+
+    if (username.length < 2) {
+      return {
+          errors: [{
+          field: "username",
+          message: "Invalid username",
+        }]
+      }
     }
 
     if (!email.includes('@')) {
-
+      return {
+          errors: [{
+          field: "email",
+          message: "Invalid email",
+        }]
+      }
     }
 
     if (password.length < 2) {
-
+      return {
+          errors: [{
+          field: "password",
+          message: "Invalid password",
+        }]
+      }
     }
 
     const hashedPassword = await argon2.hash(password)
-    const user = User.create({ username, email, password: hashedPassword })
+    user = User.create({ username, email, password: hashedPassword })
     
     await this.userRepository.save(user)
-    
-    console.log(user)
 
-    return user
+    return { user }
   }
   
   // find all users
