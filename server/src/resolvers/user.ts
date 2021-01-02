@@ -146,7 +146,7 @@ export class UserResolver {
     @Arg("options") { username, email, password }: InputRegister
   ): Promise<UserResponse> {
 
-    // check duplicate email username
+    // check duplicate email usernames
     let user = await this.userRepository.findOne({
       where: { $or: [{ email }, { username }] }
     })
