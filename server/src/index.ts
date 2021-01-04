@@ -13,10 +13,15 @@ import { COOKIE_NAME, __prod__ } from "./constants"
 import { MyContext } from "./types"
 
 const main = async () => {
+  await createConnection(ormConfig).then(async conn => {
+    conn.runMigrations()
+  })
+  
   const RedisStore = connectRedis(session)
-  const redis = new Redis()
-
+  const redis = new Redis(process.env.REDIS_URL)
+  
   const app = express()
+  // app.set("trust proxy", 1)
   
   app.use(
     cors({
@@ -39,27 +44,29 @@ const main = async () => {
         secure: __prod__, // cookie only works in https
       },
       saveUninitialized: false,
-      secret: 'kylepunorandomsecret', // FIXME: put in dot file
+      secret: "kylepunorandomsecret",
       resave: false,
     })
   )
-
-  await createConnection(ormConfig).then(async conn => {
-    conn.runMigrations()
-  })
   
   const schema = await buildSchema({
     resolvers: [UserResolver],
+    validate: false,
   })
 
   const apolloServer = new ApolloServer({ 
     schema,
     context: ({req, res}): MyContext  => ({ req, res, redis }),
   })
-  apolloServer.applyMiddleware({ app })
+
+  apolloServer.applyMiddleware({ 
+    app,
+    cors: false, 
+  })
   
-  await app.listen(4000)
-  console.log("Server has started!")
+  app.listen(4000, () => {
+    console.log("Server has started!")
+  })
 }
 
 main().catch((err) => {

@@ -74,12 +74,13 @@ export class UserResolver {
   }
   
   // login user
-  @Query(() => UserResponse)
+  @Mutation(() => UserResponse)
   async login(
     @Arg("usernameOrEmail") usernameOrEmail: string,
     @Arg("password") password: string,
     @Ctx() { req }: MyContext
   ): Promise<UserResponse> {
+    console.log(usernameOrEmail, password)
     const user = await this.userRepository.findOne(
       usernameOrEmail.includes('@') ? 
         { email: usernameOrEmail } : { username: usernameOrEmail }
@@ -141,7 +142,7 @@ export class UserResolver {
   // redis caching
   // login  user when created
 
-  @Mutation(() => User) 
+  @Mutation(() => UserResponse) 
   async register (
     @Arg("options") { username, email, password }: InputRegister
   ): Promise<UserResponse> {

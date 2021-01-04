@@ -1,14 +1,11 @@
+import React from "react"
+import { Box } from "@chakra-ui/react"
 import Link from "next/link"
+import { withApollo } from "../utils/withApollo"
 
 const Index = () => (
-  <div title="Home | Next.js + TypeScript Example">
-    <h1>Hello Next.js 👋</h1>
-    <p>
-      <Link href="/">
-        <a>About</a>
-      </Link>
-    </p>
-  </div>
+  <Box w="100%" h="100%">
+  </Box>
 )
 
-export default Index
+export default withApollo({ ssr: true })(Index)

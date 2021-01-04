@@ -6,9 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint '*/**/*.{js,ts,tsx}' --quiet --fix"
+    "lint": "eslint '*/**/*.{js,ts,tsx}' --quiet --fix",
+    "gen": "graphql-codegen --config codegen.yml"
   },
   "dependencies": {
+    "@apollo/client": "^3.3.6",
     "@chakra-ui/icons": "^1.0.0",
     "@chakra-ui/react": "^1.0.0",
     "@emotion/react": "^11.0.0",
@@ -18,17 +20,23 @@
     "graphql": "^15.4.0",
     "isomorphic-unfetch": "^3.1.0",
     "next": "latest",
+    "next-apollo": "^5.0.4",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
     "react-is": "^17.0.1"
   },
   "devDependencies": {
+    "@graphql-codegen/cli": "1.20.0",
+    "@graphql-codegen/typescript": "1.20.0",
+    "@graphql-codegen/typescript-operations": "1.17.13",
+    "@graphql-codegen/typescript-react-apollo": "2.2.1",
     "@types/eslint": "^7.2.6",
     "@types/eslint-plugin-prettier": "^3.1.0",
     "@types/node": "^14.14.19",
     "@types/prettier": "^2.1.6",
     "@types/react": "17.0.0",
     "@types/react-dom": "17.0.0",
+    "@types/react-is": "^17.0.0",
     "@typescript-eslint/eslint-plugin": "^4.11.1",
     "@typescript-eslint/parser": "^4.11.1",
     "eslint": "^7.17.0",
