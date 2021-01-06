@@ -3,6 +3,7 @@ import { ObjectType, Field, ID, Int } from "type-graphql"
 import { User } from "./User"
 // import { Beat } from "./Beat"
 import { Vote } from "./Vote"
+import { Beat } from "./Beat"
 
 @Entity()
 @ObjectType()
@@ -49,8 +50,8 @@ export class Post extends BaseEntity {
   // @OneToMany(() => Beat, beat => beat.post)
   // beats: Beat[]
 
-  @Field(() => String)
-  beat: string // one beat for now per post
+  @Field(() => Beat)
+  beats: Beat[] // one beat for now per post
 
   @OneToMany(() => Vote, (vote) => vote.post)
   votes: Vote[];

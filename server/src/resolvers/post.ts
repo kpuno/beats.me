@@ -2,18 +2,22 @@ import {
   Arg,
   Ctx,
   Field,
+  FieldResolver,
   InputType,
   Int,
   Mutation,
   Query,
   Resolver,
+  Root,
   UseMiddleware,
 } from "type-graphql"
 import { getConnection } from "typeorm"
 import { Post } from "../entities/Post"
 import { Vote } from "../entities/Vote"
+import { User } from "../entities/User"
 import { isAuth } from "../middleware/isAuth"
 import { MyContext } from "../types"
+import { Beat } from "../entities/Beat"
 
 @InputType()
 class PostInput {
@@ -22,9 +26,6 @@ class PostInput {
   
   @Field()
   image: string
-
-  @Field()
-  beat: string
 }
 
 @Resolver(Post)
@@ -33,15 +34,22 @@ export class PostResolver {
   post(@Arg("id", () => Int) id: number): Promise<Post | undefined> {
     return Post.findOne(id)
   }
+
+  @FieldResolver(() => User)
+  creator(@Root() post: Post, @Ctx() { userLoader }: MyContext) {
+    return userLoader.load(post.creatorId);
+  }
  
   @Mutation(() => Post)
   @UseMiddleware(isAuth)
   async createPost(
     @Arg("input") input: PostInput,
+    @Arg("beats") beats: Beat[],
     @Ctx() { req }: MyContext
   ): Promise<Post> {
     return Post.create({
       ...input,
+      beats,
       creatorId: req.session.userId,
     }).save()
   }
@@ -78,22 +86,22 @@ export class PostResolver {
     return true
   }
 
-  // @FieldResolver(() => Int, { nullable: true })
-  // async voteStatus(
-  //   @Root() post: Post,
-  //   @Ctx() { voteLoader, req }: MyContext
-  // ) {
-  //   if (!req.session.userId) {
-  //     return null;
-  //   }
+  @FieldResolver(() => Int, { nullable: true })
+  async voteStatus(
+    @Root() post: Post,
+    @Ctx() { voteLoader, req }: MyContext
+  ) {
+    if (!req.session.userId) {
+      return null;
+    }
 
-  //   const vote = await voteLoader.load({
-  //     postId: post.id,
-  //     userId: req.session.userId,
-  //   });
+    const vote = await voteLoader.load({
+      postId: post.id,
+      userId: req.session.userId,
+    });
 
-  //   return vote ? vote.value : null;
-  // }
+    return vote ? vote.value : null;
+  }
 
   @Mutation(() => Boolean)
   @UseMiddleware(isAuth)

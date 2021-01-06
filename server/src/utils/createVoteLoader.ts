@@ -7,13 +7,13 @@ export const createVoteLoader = () =>
   new DataLoader<{ postId: number; userId: number }, Vote | null>(
     async (keys) => {
       const votes = await Vote.findByIds(keys as any)
-      const updootIdsToUpdoot: Record<string, Vote> = {}
-      votes.forEach((updoot) => {
-        updootIdsToUpdoot[`${updoot.userId}|${updoot.postId}`] = updoot
+      const voteIdsToVote: Record<string, Vote> = {}
+      votes.forEach((vote) => {
+        voteIdsToVote[`${vote.userId}|${vote.postId}`] = vote
       })
 
       return keys.map(
-        (key) => updootIdsToUpdoot[`${key.userId}|${key.postId}`]
+        (key) => voteIdsToVote[`${key.userId}|${key.postId}`]
       )
     }
   )
