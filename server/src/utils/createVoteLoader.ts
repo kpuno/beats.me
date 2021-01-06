@@ -1,0 +1,19 @@
+import { Vote } from "../entities/Vote"
+import DataLoader from "dataloader"
+
+// [{postId: 5, userId: 10}]
+// [{postId: 5, userId: 10, value: 1}]
+export const createVoteLoader = () =>
+  new DataLoader<{ postId: number; userId: number }, Vote | null>(
+    async (keys) => {
+      const votes = await Vote.findByIds(keys as any)
+      const updootIdsToUpdoot: Record<string, Vote> = {}
+      votes.forEach((updoot) => {
+        updootIdsToUpdoot[`${updoot.userId}|${updoot.postId}`] = updoot
+      })
+
+      return keys.map(
+        (key) => updootIdsToUpdoot[`${key.userId}|${key.postId}`]
+      )
+    }
+  )

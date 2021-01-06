@@ -1,7 +1,6 @@
 import { User } from "../entities/User"
-import { Resolver, Query, Mutation, InputType, Arg, Field, ObjectType, Ctx } from "type-graphql"
+import { Resolver, Query, Mutation, InputType, Arg, Field, ObjectType, Ctx, Root, FieldResolver } from "type-graphql"
 import argon2 from "argon2"
-import { getRepository } from "typeorm"
 import { MyContext } from "../types"
 import { sendEmail } from "../utils/sendEmail"
 import { COOKIE_NAME, FORGET_PASSWORD_PREFIX } from "../constants"
@@ -37,13 +36,21 @@ class UserResponse {
   user?: User
 }
 
-@Resolver()
+@Resolver(User)
 export class UserResolver {
-
-  private userRepository = getRepository(User)
 
   // find username includes (as user is typing)
   // TODO: refactor out valiation
+
+  @FieldResolver(() => String)
+  email(@Root() user: User, @Ctx() { req }: MyContext) {
+    // this is the current user and its ok to show them their own email
+    if (req.session.userId === user.id) {
+      return user.email;
+    }
+    // current user wants to see someone elses email
+    return "";
+  }
 
   @Mutation(() => UserResponse)
   async changePassword(
@@ -74,7 +81,7 @@ export class UserResolver {
     }
 
     const userIdNum = parseInt(userId)
-    const user = await this.userRepository.findOne({id: userIdNum.toString() })
+    const user = await User.findOne({id: userIdNum })
 
     if(!user ) {
       return {
@@ -88,13 +95,17 @@ export class UserResolver {
     }
 
     const hashedPassword = await argon2.hash(newPassword)
-    user.password = hashedPassword
 
-    await this.userRepository.save(user)
+    await User.update(
+      { id : userIdNum },
+      {
+        password: hashedPassword
+      }
+    )
 
     await redis.del(key)
     // login user after change password
-    req.session!.userId = parseInt(user.id)
+    req.session!.userId = user.id
 
     return { user }
   }
@@ -136,7 +147,7 @@ export class UserResolver {
       return null
     }
 
-    const user = await this.userRepository.findOne({ id: req.session.userId.toString() })
+    const user = await User.findOne({ id: req.session.userId })
     
     return user
   }
@@ -146,7 +157,7 @@ export class UserResolver {
   async user(
     @Arg("username") username: string
   ): Promise<UserResponse> {
-    const user = await this.userRepository.findOne({ username })
+    const user = await User.findOne({ username })
     
     if (!user) {
       return {
@@ -168,7 +179,7 @@ export class UserResolver {
     @Ctx() { req }: MyContext
   ): Promise<UserResponse> {
     console.log(usernameOrEmail, password)
-    const user = await this.userRepository.findOne(
+    const user = await User.findOne(
       usernameOrEmail.includes('@') ? 
         { email: usernameOrEmail } : { username: usernameOrEmail }
     )
@@ -202,7 +213,7 @@ export class UserResolver {
         // store user id session
         // this will set a cookie on the user
         // keep them logged in
-        req.session!.userId = parseInt(user.id)
+        req.session!.userId = user.id
         
         return { user }
       } else {
@@ -246,7 +257,7 @@ export class UserResolver {
   ): Promise<UserResponse> {
     const { username, email, password } = options
     // check duplicate email usernames
-    let user = await this.userRepository.findOne({
+    let user = await User.findOne({
       where: [{ email }, { username }]
     })
     console.log(user)
@@ -289,12 +300,12 @@ export class UserResolver {
     const hashedPassword = await argon2.hash(password)
     user = User.create({ username, email, password: hashedPassword })
 
-    await this.userRepository.save(user)
+    await User.save(user)
 
     // store user id session
     // this will set a cookie on the user
     // keep them logged in
-    req.session!.userId = parseInt(user.id)
+    req.session!.userId = user.id
 
     return { user }
   }
@@ -302,6 +313,6 @@ export class UserResolver {
   // find all users
   @Query(() => [User])
   users(): Promise<User[]> {
-    return this.userRepository.find({})
+    return User.find({})
   }
 }

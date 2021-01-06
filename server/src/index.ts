@@ -11,6 +11,9 @@ import connectRedis from "connect-redis"
 import cors from "cors"
 import { COOKIE_NAME, __prod__ } from "./constants"
 import { MyContext } from "./types"
+import { PostResolver } from "./resolvers/post"
+import { createVoteLoader } from "./utils/createVoteLoader"
+import { createUserLoader } from "./utils/createUserLoader"
 
 const main = async () => {
   await createConnection(ormConfig).then(async conn => {
@@ -50,13 +53,19 @@ const main = async () => {
   )
   
   const schema = await buildSchema({
-    resolvers: [UserResolver],
+    resolvers: [UserResolver, PostResolver],
     validate: false,
   })
 
   const apolloServer = new ApolloServer({ 
     schema,
-    context: ({req, res}): MyContext  => ({ req, res, redis }),
+    context: ({req, res}): MyContext  => ({ 
+      req, 
+      res, 
+      redis,
+      userLoader: createUserLoader(),
+      voteLoader: createVoteLoader(),
+    }),
   })
 
   apolloServer.applyMiddleware({ 
