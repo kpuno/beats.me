@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, BaseEntity, UpdateDateColumn, ManyToOne } from "typeorm"
+import { Entity, Column, CreateDateColumn, BaseEntity, UpdateDateColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm"
 import { ObjectType, Field, ID } from "type-graphql"
 import { Post } from "./Post"
 
@@ -8,7 +8,7 @@ export class Beat extends BaseEntity {
   @Field(() => ID)
   @PrimaryGeneratedColumn()
   id: number
-
+  
   @CreateDateColumn()
   createdAt: Date
 
@@ -17,13 +17,23 @@ export class Beat extends BaseEntity {
 
   @Field(() => String)
   @Column()
-  creator!: string
+  label: string
 
-  @ManyToOne(() => Post, post => post.beats)
+  // based of user id foreign key
+  @Field()
+  @Column()
+  userId: number
+
+  @Field()
+  @Column()
+  postId: number
+
+  @ManyToOne(() => Post, (post) => post.beats, {
+    onDelete: "CASCADE",
+  })
   post: Post
 
   // might need a dataloader for beats
-
   @Field(() => String)
   @Column()
   beat: string // url to beat

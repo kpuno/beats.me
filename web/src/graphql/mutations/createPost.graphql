@@ -1,0 +1,11 @@
+mutation CreatePost($input: PostInput!, $beatsInput: [BeatInput!]!) {
+  createPost(input: $input, beatsInput: $beatsInput) {
+    # temp, can re factor into fragment
+    id
+    creatorId
+    creator {
+      username
+      id
+    }
+  }
+}

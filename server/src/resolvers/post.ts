@@ -18,6 +18,7 @@ import { User } from "../entities/User"
 import { isAuth } from "../middleware/isAuth"
 import { MyContext } from "../types"
 import { Beat } from "../entities/Beat"
+import { QueryDeepPartialEntity } from "typeorm/query-builder/QueryPartialEntity"
 
 @InputType()
 class PostInput {
@@ -26,6 +27,15 @@ class PostInput {
   
   @Field()
   image: string
+}
+
+@InputType()
+class BeatInput {
+  @Field()
+  label: string
+
+  @Field()
+  beat: string
 }
 
 @Resolver(Post)
@@ -44,14 +54,34 @@ export class PostResolver {
   @UseMiddleware(isAuth)
   async createPost(
     @Arg("input") input: PostInput,
-    @Arg("beats") beats: Beat[],
+    @Arg("beatsInput", () => [BeatInput]) beatsInput: BeatInput[],
     @Ctx() { req }: MyContext
   ): Promise<Post> {
-    return Post.create({
+    // FIXME: can be done in a better way
+    let createdPost = await Post.create({
       ...input,
-      beats,
       creatorId: req.session.userId,
     }).save()
+
+    let beats = beatsInput.map((b) => {
+      return {
+        beat: b.beat,
+        label: b.label,
+        userId: req.session.userId,
+        postId: createdPost.id
+      } as QueryDeepPartialEntity<Beat>
+     })
+
+     await getConnection()
+     .createQueryBuilder()
+     .insert()
+     .into(Beat)
+     .values([...beats])
+     .execute()
+
+    // return a join table
+
+    return await createdPost
   }
 
   @Mutation(() => Post, { nullable: true })

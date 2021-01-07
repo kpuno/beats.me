@@ -43,6 +43,9 @@ export const Home: React.FC<HomeProps> = ({}) => {
         >
           logout
         </Button>
+        <NextLink href="/create-post">
+          <Link mr={2}>create post</Link>
+        </NextLink>
       </>
     )
   }

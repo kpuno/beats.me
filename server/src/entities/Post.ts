@@ -26,19 +26,15 @@ export class Post extends BaseEntity {
   @Column()
   creatorId: number
 
-  @Field(() => String)
-  @Column()
-  creator!: string
-
   @Field()
   @Column({ type: "int", default: 0 })
-  points!: number;
+  points!: number
 
   @Field(() => Int, { nullable: true })
-  voteStatus: number | null; // 1 or -1 or null
+  voteStatus: number | null // 1 or -1 or null
 
   @ManyToOne(() => User, user => user.posts)
-  user: User
+  creator: User
 
   @Field(() => String)
   @Column()
@@ -50,9 +46,10 @@ export class Post extends BaseEntity {
   // @OneToMany(() => Beat, beat => beat.post)
   // beats: Beat[]
 
-  @Field(() => Beat)
-  beats: Beat[] // one beat for now per post
+  @Field(() => [Beat])
+  @OneToMany(() => Beat, beat => beat.post)
+  beats: Beat[]
 
   @OneToMany(() => Vote, (vote) => vote.post)
-  votes: Vote[];
+  votes: Vote[]
 }
